@@ -1,6 +1,9 @@
 package org.dedda.copycat.android
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
+import android.content.Context.CLIPBOARD_SERVICE
 import android.content.res.Configuration
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +29,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.dedda.copycat.android.sampledata.SampleRepository
+import org.dedda.copycat.communication.HttpClipboardSink
+import org.dedda.copycat.communication.HttpClipboardSource
 import org.dedda.copycat.database.Repository
 import org.dedda.copycat.database.Server
 
@@ -98,12 +103,32 @@ fun QuickRxTxListItem(
 }
 
 fun sendClipboard(context: Context, server: Server) {
-    Toast.makeText(context, "Sending Clipboard to ${server.name}...", Toast.LENGTH_SHORT).show()
+    val clipboard = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+    val primaryClip = clipboard.primaryClip
+    val toastText: String
+    if (primaryClip != null) {
+        val text = primaryClip.getItemAt(0).coerceToText(context)
+        if (HttpClipboardSink(server).sendText(text.toString())) {
+            toastText = "Sent clipboard to ${server.name}"
+        } else {
+            toastText = "Could not send clipboard to ${server.name}"
+        }
+    } else {
+        toastText = "Could not get clipboard contents"
+    }
+    Toast.makeText(context, toastText, Toast.LENGTH_SHORT).show()
 }
 
 fun receiveClipboard(context: Context, server: Server) {
-    Toast.makeText(context, "Requesting Clipboard from ${server.name}...", Toast.LENGTH_SHORT)
-        .show()
+    val clipboard = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+    val source = HttpClipboardSource(server)
+    val text = source.receiveText()
+    if (text != null) {
+        clipboard.setPrimaryClip(ClipData.newPlainText("CopyCat Paste", text))
+        Toast.makeText(context, "Received clipboard from ${server.name}", Toast.LENGTH_SHORT).show()
+    } else {
+        Toast.makeText(context, "Could not request clipboard from ${server.name}", Toast.LENGTH_SHORT).show()
+    }
 }
 
 @Preview

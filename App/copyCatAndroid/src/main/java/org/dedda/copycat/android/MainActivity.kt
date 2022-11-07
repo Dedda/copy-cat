@@ -1,6 +1,7 @@
 package org.dedda.copycat.android
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -19,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -99,8 +102,15 @@ fun MainContents(
                             navControler.backQueue.clear()
                             navControler.navigate(navItem.route)
                         },
-                        icon = { Icon(navItem.icon, navItem.contentDescription) },
-                        label = { Text(text = navItem.label) },
+                        icon = {
+                            Icon(navItem.icon, navItem.contentDescription, tint = appColors().navBarLabelColor)
+                               },
+                        label = {
+                            Text(
+                                color = appColors().navBarLabelColor,
+                                text = navItem.label,
+                            )
+                        },
                     )
                 }
             }
@@ -117,4 +127,13 @@ private enum class BottomNavItem(
     HomeNavItem("home", Icons.Filled.Home, "Home icon", "Home"),
     ServerListNavItem("servers", Icons.Filled.List, "Server list icon", "Servers"),
     SettingsNavItem("settings", Icons.Filled.Settings, "Settings icon", "Settings")
+}
+
+@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun MainContentsPreview() {
+    MyApplicationTheme {
+        MainContents(repo = SampleRepository())
+    }
 }

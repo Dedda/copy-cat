@@ -38,7 +38,7 @@ fun MyApplicationTheme(
             fontFamily = FontFamily.Default,
             fontWeight = FontWeight.Normal,
             fontSize = 16.sp,
-            color = if (darkTheme) Color(0xFFD0D0D0) else Color(0xFF202020),
+            color = appColors().textColor,
         )
     )
     val shapes = Shapes(
@@ -61,12 +61,16 @@ fun appColors(): AppColors = if (isSystemInDarkTheme()) {
             sendButtonColor = Color(0xFFDD5555),
             receiveButtonColor = Color(0xFF66DD66),
             editIconColor = Color(0xFF44AAFF),
+            textColor = Color(0xFFD0D0D0),
+            navBarLabelColor = Color(0xFFE0E0E0),
         )
     } else {
         AppColors(
             sendButtonColor = Color(0xFFAA3333),
             receiveButtonColor = Color(0xFF229922),
             editIconColor = Color(0xFF1133DD),
+            textColor = Color(0xFF202020),
+            navBarLabelColor = Color(0xFFE0E0E0),
         )
     }
 
@@ -74,4 +78,6 @@ data class AppColors(
     val sendButtonColor: Color,
     val receiveButtonColor: Color,
     val editIconColor: Color,
+    val textColor: Color,
+    val navBarLabelColor: Color,
 )
