@@ -1,0 +1,17 @@
+CREATE TABLE Server (
+    id INTEGER PRIMARY KEY NOT NULL,
+    name TEXT UNIQUE NOT NULL,
+    address TEXT NOT NULL
+);
+
+allServers:
+SELECT * FROM Server;
+
+serverByNameOrAddress:
+SELECT * FROM Server WHERE name = ? OR address = ? LIMIT 1;
+
+insertServer:
+INSERT INTO Server(id, name, address) VALUES ((SELECT IFNULL(MAX(id), 0) FROM Server LIMIT 1) + 1, ?, ?);
+
+deleteServer:
+DELETE FROM Server WHERE id = ?;
