@@ -1,5 +1,6 @@
 package org.dedda.copycat.android
 
+import android.content.res.Configuration
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
@@ -18,17 +19,10 @@ fun AddServerContents(
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun LightAddServerPreview() {
-    MyApplicationTheme(darkTheme = false) {
-        AddServerContents(repo = SampleRepository())
-    }
-}
-
-@Preview
-@Composable
-fun DarkAddServerPreview() {
-    MyApplicationTheme(darkTheme = true) {
+    MyApplicationTheme {
         AddServerContents(repo = SampleRepository())
     }
 }

@@ -1,5 +1,6 @@
 package org.dedda.copycat.android
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -11,12 +12,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Card
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,54 +71,43 @@ fun ServerListItem(
     onNavigateToEditServer: (Long) -> Unit = {}
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
         elevation = 4.dp,
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(4.dp),
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 fontSize = 24.sp,
                 text = server.name,
             )
-            TextButton(onClick = { onNavigateToEditServer(server.id) }) {
-                Text(text = "Edit")
+            IconButton(onClick = { onNavigateToEditServer(server.id) }) {
+                Icon(Icons.Filled.Edit, "Edit icon", tint = appColors().editIconColor)
             }
         }
     }
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun LightServerListItemPreview() {
-    MyApplicationTheme(darkTheme = false) {
+fun ServerListItemPreview() {
+    MyApplicationTheme() {
         ServerListItem(SampleRepository().allServers()[0])
     }
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun DarkServerListItemPreview() {
-    MyApplicationTheme(darkTheme = true) {
-        ServerListItem(SampleRepository().allServers()[0])
-    }
-}
-
-@Preview
-@Composable
-fun LightServerListPreview() {
-    MyApplicationTheme(darkTheme = false) {
-        ServerListContents(repo = SampleRepository())
-    }
-}
-
-@Preview
-@Composable
-fun DarkServerListPreview() {
-    MyApplicationTheme(darkTheme = true) {
-        ServerListContents(repo = SampleRepository())
+fun ServerListPreview() {
+    MyApplicationTheme() {
+        ServerListContents(SampleRepository())
     }
 }

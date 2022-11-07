@@ -54,3 +54,24 @@ fun MyApplicationTheme(
         content = content
     )
 }
+
+@Composable
+fun appColors(): AppColors = if (isSystemInDarkTheme()) {
+        AppColors(
+            sendButtonColor = Color(0xFFDD5555),
+            receiveButtonColor = Color(0xFF66DD66),
+            editIconColor = Color(0xFF44AAFF),
+        )
+    } else {
+        AppColors(
+            sendButtonColor = Color(0xFFAA3333),
+            receiveButtonColor = Color(0xFF229922),
+            editIconColor = Color(0xFF1133DD),
+        )
+    }
+
+data class AppColors(
+    val sendButtonColor: Color,
+    val receiveButtonColor: Color,
+    val editIconColor: Color,
+)
