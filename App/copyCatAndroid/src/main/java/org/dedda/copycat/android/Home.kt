@@ -105,16 +105,15 @@ fun QuickRxTxListItem(
 fun sendClipboard(context: Context, server: Server) {
     val clipboard = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
     val primaryClip = clipboard.primaryClip
-    val toastText: String
-    if (primaryClip != null) {
+    val toastText = if (primaryClip != null) {
         val text = primaryClip.getItemAt(0).coerceToText(context)
         if (HttpClipboardSink(server).sendText(text.toString())) {
-            toastText = "Sent clipboard to ${server.name}"
+            "Sent clipboard to ${server.name}"
         } else {
-            toastText = "Could not send clipboard to ${server.name}"
+            "Could not send clipboard to ${server.name}"
         }
     } else {
-        toastText = "Could not get clipboard contents"
+        "Could not get clipboard contents"
     }
     Toast.makeText(context, toastText, Toast.LENGTH_SHORT).show()
 }
@@ -122,7 +121,7 @@ fun sendClipboard(context: Context, server: Server) {
 fun receiveClipboard(context: Context, server: Server) {
     val clipboard = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
     val source = HttpClipboardSource(server)
-    val text = source.receiveText()
+    val text = source.requestText()
     if (text != null) {
         clipboard.setPrimaryClip(ClipData.newPlainText("CopyCat Paste", text))
         Toast.makeText(context, "Received clipboard from ${server.name}", Toast.LENGTH_SHORT).show()

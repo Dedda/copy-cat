@@ -1,8 +1,11 @@
+val coroutinesVersion = "1.6.4"
+val ktorVersion = "2.1.2"
 val sqlDelightVersion = "1.5.3"
 
 plugins {
     kotlin("multiplatform")
     kotlin("native.cocoapods")
+    kotlin("plugin.serialization") version "1.7.20"
     id("com.android.library")
     id("com.squareup.sqldelight")
 }
@@ -27,7 +30,14 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
+                implementation("io.ktor:ktor-client-cio:$ktorVersion")
+                implementation("io.ktor:ktor-client-core:$ktorVersion")
+                implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+                implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+                implementation("io.ktor:ktor-client-resources:$ktorVersion")
                 implementation("com.squareup.sqldelight:runtime:$sqlDelightVersion")
+                implementation("io.matthewnelson.kotlin-components:encoding-base64:1.1.3")
             }
         }
         val commonTest by getting {
