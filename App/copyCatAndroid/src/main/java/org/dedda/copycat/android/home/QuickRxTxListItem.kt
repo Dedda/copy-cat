@@ -1,24 +1,18 @@
-package org.dedda.copycat.android
+package org.dedda.copycat.android.home
 
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Context.CLIPBOARD_SERVICE
 import android.content.res.Configuration
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
@@ -32,30 +26,13 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.dedda.copycat.android.MyApplicationTheme
+import org.dedda.copycat.android.R
+import org.dedda.copycat.android.appColors
 import org.dedda.copycat.android.sampledata.SampleRepository
 import org.dedda.copycat.communication.HttpClipboardSink
 import org.dedda.copycat.communication.HttpClipboardSource
-import org.dedda.copycat.database.Repository
 import org.dedda.copycat.database.Server
-
-@Composable
-fun HomeContents(
-    repo: Repository
-) {
-    val servers = repo.allServers()
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colors.background
-    ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            items(servers) { server ->
-                QuickRxTxListItem(server)
-            }
-        }
-    }
-}
 
 @Composable
 fun QuickRxTxListItem(
@@ -144,7 +121,7 @@ fun receiveClipboard(context: Context, server: Server) {
 }
 
 private fun getClipboardManager(context: Context): ClipboardManager {
-    return context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+    return context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 }
 
 @Preview
@@ -153,14 +130,5 @@ private fun getClipboardManager(context: Context): ClipboardManager {
 fun QuickRxTxListItemPreview() {
     MyApplicationTheme {
         QuickRxTxListItem(server = SampleRepository().allServers()[0])
-    }
-}
-
-@Preview
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun HomePreview() {
-    MyApplicationTheme {
-        HomeContents(repo = SampleRepository())
     }
 }

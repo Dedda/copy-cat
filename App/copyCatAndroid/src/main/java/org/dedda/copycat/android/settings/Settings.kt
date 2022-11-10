@@ -1,4 +1,4 @@
-package org.dedda.copycat.android
+package org.dedda.copycat.android.settings
 
 import androidx.compose.runtime.Composable
 

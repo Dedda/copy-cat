@@ -29,7 +29,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import org.dedda.copycat.android.addserver.AddServerContents
+import org.dedda.copycat.android.editserver.EditServer
+import org.dedda.copycat.android.home.HomeContents
 import org.dedda.copycat.android.sampledata.SampleRepository
+import org.dedda.copycat.android.serverlist.ServerListContents
+import org.dedda.copycat.android.settings.SettingsContents
 import org.dedda.copycat.database.DatabaseDriverFactory
 import org.dedda.copycat.database.DatabaseRepository
 import org.dedda.copycat.database.Repository
