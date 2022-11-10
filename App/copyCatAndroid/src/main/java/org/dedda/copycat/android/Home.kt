@@ -17,14 +17,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,7 +52,6 @@ fun HomeContents(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             items(servers) { server ->
                 QuickRxTxListItem(server)
@@ -89,7 +92,7 @@ fun QuickRxTxListItem(
                 }) {
                     Text(
                         color = appColors().sendButtonColor,
-                        text = "Send",
+                        text = stringResource(R.string.home_send),
                     )
                 }
                 TextButton(onClick = {
@@ -97,7 +100,7 @@ fun QuickRxTxListItem(
                 }) {
                     Text(
                         color = appColors().receiveButtonColor,
-                        text = "Receive",
+                        text = stringResource(R.string.home_receive),
                     )
                 }
             }
@@ -106,7 +109,7 @@ fun QuickRxTxListItem(
 }
 
 fun sendClipboard(context: Context, server: Server) {
-    val clipboard = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+    val clipboard = getClipboardManager(context)
     val primaryClip = clipboard.primaryClip
     runBlocking {
         val toastText = if (primaryClip != null) {
@@ -126,19 +129,25 @@ fun sendClipboard(context: Context, server: Server) {
 }
 
 fun receiveClipboard(context: Context, server: Server) {
-    val clipboard = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+    val clipboard = getClipboardManager(context)
     val source = HttpClipboardSource(server)
-    val text = source.requestText()
-    if (text != null) {
-        clipboard.setPrimaryClip(ClipData.newPlainText("CopyCat Paste", text))
-        Toast.makeText(context, "Received clipboard from ${server.name}", Toast.LENGTH_SHORT).show()
-    } else {
-        Toast.makeText(
-            context,
-            "Could not request clipboard from ${server.name}",
-            Toast.LENGTH_SHORT
-        ).show()
+    runBlocking {
+        val text = source.requestText()
+        val toastText = if (text != null) {
+            clipboard.setPrimaryClip(ClipData.newPlainText("CopyCat Paste", text))
+            "Received clipboard from ${server.name}"
+
+        } else {
+            "Could not request clipboard from ${server.name}"
+        }
+        MainScope().launch {
+            Toast.makeText(context, toastText, Toast.LENGTH_SHORT).show()
+        }
     }
+}
+
+private fun getClipboardManager(context: Context): ClipboardManager {
+    return context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
 }
 
 @Preview

@@ -1,7 +1,7 @@
 package org.dedda.copycat.android
 
-import android.annotation.SuppressLint
-import android.content.res.Configuration
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -15,12 +15,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.res.stringResource
+import androidx.core.util.Consumer
+import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -42,101 +44,149 @@ class MainActivity : ComponentActivity() {
             }
         }
         setContent {
+            val navControler = rememberNavController()
             MyApplicationTheme {
-                MainContents()
+                Scaffold(
+                    topBar = {},
+                    content = { padding ->
+                        NavHost(
+                            modifier = Modifier.padding(padding),
+                            navController = navControler,
+                            startDestination = "home",
+                        ) {
+                            composable("home") {
+                                HomeContents(database)
+                            }
+                            composable("servers") {
+                                ServerListContents(
+                                    database,
+                                    onNavigateToAddServer = { navControler.navigate("addServer") },
+                                    onNavigateToEditServer = { serverId -> navControler.navigate("editServer/$serverId") },
+                                )
+                            }
+                            composable("addServer") {
+                                AddServerContents(
+                                    database,
+                                    onNavigateBack = { navControler.popBackStack() }
+                                )
+                            }
+                            composable(
+                                "addServer/{address}",
+                                arguments = listOf(navArgument("address") {
+                                    type = NavType.StringType
+                                    nullable = true
+                                })
+                            ) { backStackEntry ->
+                                AddServerContents(
+                                    database,
+                                    startAddress = backStackEntry.arguments?.getString("address")
+                                        ?: "",
+                                    onNavigateBack = { navControler.popBackStack() }
+                                )
+                            }
+                            composable(
+                                "editServer/{serverId}",
+                                arguments = listOf(navArgument("serverId") {
+                                    type = NavType.LongType
+                                    nullable = false
+                                })
+                            ) { backStackEntry ->
+                                EditServer(
+                                    database,
+                                    serverId = backStackEntry.arguments!!.getLong("serverId"),
+                                    onNavigateBack = { navControler.popBackStack() }
+                                )
+                            }
+                            composable("settings") {
+                                SettingsContents()
+                            }
+                        }
+                        (LocalContext.current as? Activity)?.intent?.let {
+                            handleIntentUriNavigation(it, navControler, database)
+                        }
+                    },
+                    bottomBar = {
+                        BottomNavigation {
+                            val navBackEntry by navControler.currentBackStackEntryAsState()
+                            val currentRoute = navBackEntry?.destination?.route
+                            BottomNavItem.values().forEach { navItem ->
+                                BottomNavigationItem(
+                                    selected = currentRoute == navItem.route,
+                                    onClick = {
+                                        navControler.backQueue.clear()
+                                        navControler.navigate(navItem.route)
+                                    },
+                                    icon = {
+                                        Icon(
+                                            navItem.icon,
+                                            navItem.contentDescription,
+                                            tint = appColors().navBarLabelColor
+                                        )
+                                    },
+                                    label = {
+                                        Text(
+                                            color = appColors().navBarLabelColor,
+                                            text = stringResource(navItem.label),
+                                        )
+                                    },
+                                )
+                            }
+                        }
+                    }
+                )
+            }
+            DisposableEffect(Unit) {
+                val listener = Consumer<Intent> {
+                    handleIntentUriNavigation(intent, navControler, database)
+                }
+                addOnNewIntentListener(listener)
+                onDispose { removeOnNewIntentListener(listener) }
             }
         }
     }
 }
 
-@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
-@Composable
-fun MainContents(
-    repo: Repository = DatabaseRepository(DatabaseDriverFactory(LocalContext.current))
+private fun handleIntentUriNavigation(
+    intent: Intent,
+    navControler: NavController,
+    repo: Repository,
 ) {
-    val navControler = rememberNavController()
-    Scaffold(
-        topBar = {},
-        content = { padding ->
-            NavHost(
-                modifier = Modifier.padding(padding),
-                navController = navControler,
-                startDestination = "home"
-            ) {
-                composable("home") {
-                    HomeContents(repo)
-                }
-                composable("servers") {
-                    ServerListContents(
-                        repo,
-                        onNavigateToAddServer = { navControler.navigate("addServer") },
-                        onNavigateToEditServer = { serverId -> navControler.navigate("editServer/$serverId") },
-                    )
-                }
-                composable("addServer") {
-                    AddServerContents(
-                        repo,
-                        onNavigateBack = { navControler.popBackStack() }
-                    )
-                }
-                composable(
-                    "editServer/{serverId}",
-                    arguments = listOf(navArgument("serverId") { type = NavType.LongType })
-                ) { backStackEntry ->
-                    EditServer(
-                        repo,
-                        serverId = backStackEntry.arguments!!.getLong("serverId"),
-                        onNavigateBack = { navControler.popBackStack() }
-                    )
-                }
-                composable("settings") {
-                    SettingsContents()
-                }
-            }
-        },
-        bottomBar = {
-            BottomNavigation {
-                val navBackEntry by navControler.currentBackStackEntryAsState()
-                val currentRoute = navBackEntry?.destination?.route
-                BottomNavItem.values().forEach { navItem ->
-                    BottomNavigationItem(
-                        selected = currentRoute == navItem.route,
-                        onClick = {
-                            navControler.backQueue.clear()
-                            navControler.navigate(navItem.route)
-                        },
-                        icon = {
-                            Icon(navItem.icon, navItem.contentDescription, tint = appColors().navBarLabelColor)
-                               },
-                        label = {
-                            Text(
-                                color = appColors().navBarLabelColor,
-                                text = navItem.label,
-                            )
-                        },
-                    )
-                }
-            }
+    val serverAddress = addServerAddress(intent)
+    serverAddress?.let { addServerAddress ->
+        navigateToServerConfiguration(repo, addServerAddress, navControler)
+    }
+}
+
+private fun navigateToServerConfiguration(
+    repo: Repository,
+    addServerAddress: String,
+    navControler: NavController
+) {
+    val foundServer = repo.serverByAddress(addServerAddress)
+    if (foundServer != null) {
+        navControler.navigate("editServer/${foundServer.id}")
+    } else {
+        navControler.navigate("addServer/$addServerAddress")
+    }
+}
+
+private fun addServerAddress(intent: Intent): String? {
+    if (intent.action == Intent.ACTION_VIEW) {
+        val data = intent.data ?: return null
+        if (data.scheme == "copycat" && data.host == "connect.app") {
+            return data.getQueryParameter("address")
         }
-    )
+    }
+    return null
 }
 
 private enum class BottomNavItem(
     val route: String,
     val icon: ImageVector,
     val contentDescription: String,
-    val label: String
+    val label: Int
 ) {
-    HomeNavItem("home", Icons.Filled.Home, "Home icon", "Home"),
-    ServerListNavItem("servers", Icons.Filled.List, "Server list icon", "Servers"),
-    SettingsNavItem("settings", Icons.Filled.Settings, "Settings icon", "Settings")
-}
-
-@Preview
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun MainContentsPreview() {
-    MyApplicationTheme {
-        MainContents(repo = SampleRepository())
-    }
+    HomeNavItem("home", Icons.Filled.Home, "Home icon", R.string.nav_home_label),
+    ServerListNavItem("servers", Icons.Filled.List, "Server list icon", R.string.nav_servers_label),
+    SettingsNavItem("settings", Icons.Filled.Settings, "Settings icon", R.string.nav_settings_label)
 }

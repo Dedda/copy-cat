@@ -14,6 +14,10 @@ class SampleRepository: Repository {
 
     override fun serverById(id: Long) = allServers().find { it.id == id }
 
+    override fun serverByAddress(address: String): Server? {
+        return allServers().find { it.address == address }
+    }
+
     override fun insertServer(name: String, address: String): Server? {
         if (allServers().none { it.name == name || it.address == address }) {
             val id = if (servers.isEmpty()) 1 else servers.maxOf { it.id } + 1

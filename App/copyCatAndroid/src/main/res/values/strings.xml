@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_label">CopyCat</string>
+
+    <string name="nav_home_label">Home</string>
+    <string name="nav_servers_label">Servers</string>
+    <string name="nav_settings_label">Settings</string>
+
+    <string name="home_send">Send</string>
+    <string name="home_receive">Receive</string>
+
+    <string name="edit_server_name_label">Name</string>
+    <string name="edit_server_address_label">Address</string>
+
+    <string name="add_server_name_label">Name</string>
+    <string name="add_server_address_label">Address</string>
+    <string name="add_server_toast_invalid_name">Invalid name</string>
+    <string name="add_server_toast_invalid_address">Invalid address</string>
+</resources>

@@ -47,7 +47,6 @@ fun ServerListContents(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             items(servers) { server ->
                 ServerListItem(

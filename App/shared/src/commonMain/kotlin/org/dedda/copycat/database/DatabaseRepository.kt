@@ -15,6 +15,10 @@ class DatabaseRepository(sqlDriver: SqlDriver): Repository {
         return query.serverById(id).executeAsOneOrNull()
     }
 
+    override fun serverByAddress(address: String): Server? {
+        return query.serverByAddress(address).executeAsOneOrNull()
+    }
+
     override fun insertServer(name: String, address: String): Server? {
         if (query.serverByNameOrAddress(name, address).executeAsOneOrNull() != null) {
             return null

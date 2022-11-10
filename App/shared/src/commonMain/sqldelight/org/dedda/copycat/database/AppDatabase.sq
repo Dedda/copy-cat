@@ -10,6 +10,9 @@ SELECT * FROM Server;
 serverById:
 SELECT * FROM Server WHERE id = ?;
 
+serverByAddress:
+SELECT * FROM Server WHERE address = ? LIMIT 1;
+
 serverByNameOrAddress:
 SELECT * FROM Server WHERE name = ? OR address = ? LIMIT 1;
 

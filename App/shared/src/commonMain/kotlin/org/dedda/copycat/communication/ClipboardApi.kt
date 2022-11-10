@@ -26,9 +26,16 @@ class ClipboardApi(private val server: Server) {
     }
 
     suspend fun sendClipboardPush(clipboardPush: ClipboardPush): ClipboardPushResponse {
-        return httpClient.post("http://" + server.address + "/push"){
+        return httpClient.post("http://" + server.address + "/push") {
             contentType(ContentType.Application.Json)
             setBody(clipboardPush)
+        }.body()
+    }
+
+    suspend fun sendClipboardRequest(clipboardRequest: ClipboardRequest): ClipboardPullResponse {
+        return httpClient.post("http://" + server.address + "/request") {
+            contentType(ContentType.Application.Json)
+            setBody(clipboardRequest)
         }.body()
     }
 }

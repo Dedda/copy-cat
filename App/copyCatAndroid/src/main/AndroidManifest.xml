@@ -6,7 +6,7 @@
     <application
         android:allowBackup="false"
         android:supportsRtl="true"
-        android:label="CopyCat"
+        android:label="@string/app_label"
         android:theme="@style/AppTheme">
         <activity
             android:name=".MainActivity"
@@ -19,7 +19,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="copycat" />
+                <data android:scheme="copycat" android:host="connect.app" />
             </intent-filter>
         </activity>
     </application>

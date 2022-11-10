@@ -4,9 +4,11 @@ import org.dedda.copycat.database.Server
 
 class HttpClipboardSource(private val server: Server): ClipboardSource {
 
-    override fun requestText(): String? {
-        print("Requesting clipboard text from `${server.name}` (${server.address})")
+    private val api: ClipboardApi = ClipboardApi(server)
+
+    override suspend fun requestText(): String? {
         val request = ClipboardRequest.text()
-        return null
+        val response = api.sendClipboardRequest(request)
+        return response.getText()
     }
 }

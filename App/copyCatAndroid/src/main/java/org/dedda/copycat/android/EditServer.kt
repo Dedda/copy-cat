@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.dedda.copycat.android.sampledata.SampleRepository
@@ -40,7 +41,7 @@ fun EditServer(
     serverId: Long,
     onNavigateBack: () -> Unit = {}
 ) {
-    var server by remember { mutableStateOf(repo.serverById(serverId)) }
+    val server by remember { mutableStateOf(repo.serverById(serverId)) }
     if (server == null) {
         onNavigateBack()
         return
@@ -84,7 +85,7 @@ fun EditServer(
             ) {
                 Text(
                     modifier = Modifier.wrapContentSize(),
-                    text = "Name",
+                    text = stringResource(R.string.edit_server_name_label),
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 TextField(
@@ -104,7 +105,7 @@ fun EditServer(
             ) {
                 Text(
                     modifier = Modifier.wrapContentSize(),
-                    text = "Address",
+                    text = stringResource(R.string.edit_server_address_label),
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 TextField(
