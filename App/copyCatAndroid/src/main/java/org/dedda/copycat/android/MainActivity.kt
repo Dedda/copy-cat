@@ -102,7 +102,9 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         (LocalContext.current as? Activity)?.intent?.let {
-                            handleIntentUriNavigation(it, navController, database)
+                            it.withAddServerAddressDo { address ->
+                                navigateToServerConfiguration(database, address, navController)
+                            }
                         }
                     },
                     bottomBar = {
@@ -137,23 +139,14 @@ class MainActivity : ComponentActivity() {
             }
             DisposableEffect(Unit) {
                 val listener = Consumer<Intent> {
-                    handleIntentUriNavigation(intent, navController, database)
+                    intent.withAddServerAddressDo {
+                        navigateToServerConfiguration(database, it, navController)
+                    }
                 }
                 addOnNewIntentListener(listener)
                 onDispose { removeOnNewIntentListener(listener) }
             }
         }
-    }
-}
-
-private fun handleIntentUriNavigation(
-    intent: Intent,
-    navController: NavController,
-    repo: Repository,
-) {
-    val serverAddress = addServerAddress(intent)
-    serverAddress?.let { addServerAddress ->
-        navigateToServerConfiguration(repo, addServerAddress, navController)
     }
 }
 
@@ -168,16 +161,6 @@ private fun navigateToServerConfiguration(
     } else {
         navController.navigate("addServer/$addServerAddress")
     }
-}
-
-private fun addServerAddress(intent: Intent): String? {
-    if (intent.action == Intent.ACTION_VIEW) {
-        val data = intent.data ?: return null
-        if (data.scheme == "copycat" && data.host == "connect.app") {
-            return data.getQueryParameter("address")
-        }
-    }
-    return null
 }
 
 private enum class BottomNavItem(
