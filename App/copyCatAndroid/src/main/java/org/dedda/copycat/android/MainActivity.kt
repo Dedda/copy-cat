@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -71,7 +70,7 @@ fun MainContents(
                     ServerListContents(
                         repo,
                         onNavigateToAddServer = { navControler.navigate("addServer") },
-                        onNavigateToEditServer = { serverId -> navControler.navigate("editServer/$serverId") }
+                        onNavigateToEditServer = { serverId -> navControler.navigate("editServer/$serverId") },
                     )
                 }
                 composable("addServer") {
@@ -84,7 +83,11 @@ fun MainContents(
                     "editServer/{serverId}",
                     arguments = listOf(navArgument("serverId") { type = NavType.LongType })
                 ) { backStackEntry ->
-                    EditServer(repo, serverId = backStackEntry.arguments!!.getLong("serverId"))
+                    EditServer(
+                        repo,
+                        serverId = backStackEntry.arguments!!.getLong("serverId"),
+                        onNavigateBack = { navControler.popBackStack() }
+                    )
                 }
                 composable("settings") {
                     SettingsContents()

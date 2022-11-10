@@ -6,9 +6,9 @@ class HttpClipboardSink(server: Server): ClipboardSink {
 
     private val api: ClipboardApi = ClipboardApi(server)
 
-    override fun sendText(text: String): Boolean {
+    override suspend fun sendText(text: String): Boolean {
         val push = ClipboardPush.makeText(text)
         val response = api.sendClipboardPush(push)
-        return false
+        return response.success()
     }
 }

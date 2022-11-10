@@ -18,8 +18,13 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,6 +40,7 @@ fun ServerListContents(
     onNavigateToAddServer: () -> Unit = {},
     onNavigateToEditServer: (Long) -> Unit = {},
 ) {
+    var servers by remember { mutableStateOf(repo.allServers()) }
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colors.background
@@ -43,10 +49,14 @@ fun ServerListContents(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            items(repo.allServers()) { server ->
+            items(servers) { server ->
                 ServerListItem(
                     server = server,
                     onNavigateToEditServer = onNavigateToEditServer,
+                    onDeleteServer = {
+                        repo.deleteServer(server.id)
+                        servers = repo.allServers()
+                    },
                 )
             }
         }
@@ -68,7 +78,8 @@ fun ServerListContents(
 @Composable
 fun ServerListItem(
     server: Server,
-    onNavigateToEditServer: (Long) -> Unit = {}
+    onNavigateToEditServer: (Long) -> Unit = {},
+    onDeleteServer: (Long) -> Unit = {},
 ) {
     Card(
         modifier = Modifier
@@ -87,8 +98,13 @@ fun ServerListItem(
                 fontSize = 24.sp,
                 text = server.name,
             )
-            IconButton(onClick = { onNavigateToEditServer(server.id) }) {
-                Icon(Icons.Filled.Edit, "Edit icon", tint = appColors().editIconColor)
+            Row() {
+                IconButton(onClick = { onNavigateToEditServer(server.id) }) {
+                    Icon(Icons.Filled.Edit, "Edit icon", tint = appColors().editIconColor)
+                }
+                IconButton(onClick = { onDeleteServer(server.id) }) {
+                    Icon(Icons.Filled.Delete, "Delete icon", tint = appColors().deleteIconColor)
+                }
             }
         }
     }

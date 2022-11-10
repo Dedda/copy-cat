@@ -5,7 +5,7 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.resources.Resources
-import io.ktor.client.plugins.resources.post
+import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
@@ -26,7 +26,7 @@ class ClipboardApi(private val server: Server) {
     }
 
     suspend fun sendClipboardPush(clipboardPush: ClipboardPush): ClipboardPushResponse {
-        return httpClient.post(server.address + "/push"){
+        return httpClient.post("http://" + server.address + "/push"){
             contentType(ContentType.Application.Json)
             setBody(clipboardPush)
         }.body()

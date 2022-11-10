@@ -28,6 +28,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.dedda.copycat.android.sampledata.SampleRepository
 import org.dedda.copycat.communication.HttpClipboardSink
 import org.dedda.copycat.communication.HttpClipboardSource
@@ -105,17 +108,21 @@ fun QuickRxTxListItem(
 fun sendClipboard(context: Context, server: Server) {
     val clipboard = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
     val primaryClip = clipboard.primaryClip
-    val toastText = if (primaryClip != null) {
-        val text = primaryClip.getItemAt(0).coerceToText(context)
-        if (HttpClipboardSink(server).sendText(text.toString())) {
-            "Sent clipboard to ${server.name}"
+    runBlocking {
+        val toastText = if (primaryClip != null) {
+            val text = primaryClip.getItemAt(0).coerceToText(context)
+            if (HttpClipboardSink(server).sendText(text.toString())) {
+                "Sent clipboard to ${server.name}"
+            } else {
+                "Could not send clipboard to ${server.name}"
+            }
         } else {
-            "Could not send clipboard to ${server.name}"
+            "Could not get clipboard contents"
         }
-    } else {
-        "Could not get clipboard contents"
+        MainScope().launch {
+            Toast.makeText(context, toastText, Toast.LENGTH_SHORT).show()
+        }
     }
-    Toast.makeText(context, toastText, Toast.LENGTH_SHORT).show()
 }
 
 fun receiveClipboard(context: Context, server: Server) {
@@ -126,7 +133,11 @@ fun receiveClipboard(context: Context, server: Server) {
         clipboard.setPrimaryClip(ClipData.newPlainText("CopyCat Paste", text))
         Toast.makeText(context, "Received clipboard from ${server.name}", Toast.LENGTH_SHORT).show()
     } else {
-        Toast.makeText(context, "Could not request clipboard from ${server.name}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(
+            context,
+            "Could not request clipboard from ${server.name}",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 }
 

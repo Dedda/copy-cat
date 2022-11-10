@@ -9,15 +9,17 @@ import kotlinx.serialization.Serializable
 private const val PROTOCOL_VERSION: Int = 1
 
 @Serializable
-@Resource("/request")
 data class ClipboardRequest(
     @SerialName("version")
-    val version: Int = PROTOCOL_VERSION,
+    val version: Int,
     @SerialName("clipboard_type")
     val clipboardType: String,
 ) {
     companion object {
-        fun text() = ClipboardRequest(clipboardType = ClipboardType.TEXT.value)
+        fun text() = ClipboardRequest(
+            version = PROTOCOL_VERSION,
+            clipboardType = ClipboardType.TEXT.value,
+        )
     }
 }
 
@@ -40,10 +42,9 @@ data class ClipboardPullResponse(
 }
 
 @Serializable
-@Resource("/push")
 data class ClipboardPush(
     @SerialName("version")
-    val version: Int = PROTOCOL_VERSION,
+    val version: Int,
     @SerialName("clipboard_type")
     val clipboardType: String,
     @SerialName("contents")
@@ -53,6 +54,7 @@ data class ClipboardPush(
         fun makeText(data: String): ClipboardPush {
             val contentsBase64 = data.encodeBase64()
             return ClipboardPush(
+                version = PROTOCOL_VERSION,
                 clipboardType = ClipboardType.TEXT.value,
                 contentsBase64 = contentsBase64,
             )

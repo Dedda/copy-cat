@@ -61,6 +61,8 @@ fun appColors(): AppColors = if (isSystemInDarkTheme()) {
             sendButtonColor = Color(0xFFDD5555),
             receiveButtonColor = Color(0xFF66DD66),
             editIconColor = Color(0xFF44AAFF),
+            deleteIconColor = Color(0xFFFF4444),
+            saveIconColor = Color(0xFF66DD66),
             textColor = Color(0xFFD0D0D0),
             navBarLabelColor = Color(0xFFE0E0E0),
         )
@@ -69,6 +71,8 @@ fun appColors(): AppColors = if (isSystemInDarkTheme()) {
             sendButtonColor = Color(0xFFAA3333),
             receiveButtonColor = Color(0xFF229922),
             editIconColor = Color(0xFF1133DD),
+            deleteIconColor = Color(0xFFFF2222),
+            saveIconColor = Color(0xFF229922),
             textColor = Color(0xFF202020),
             navBarLabelColor = Color(0xFFE0E0E0),
         )
@@ -78,6 +82,8 @@ data class AppColors(
     val sendButtonColor: Color,
     val receiveButtonColor: Color,
     val editIconColor: Color,
+    val deleteIconColor: Color,
+    val saveIconColor: Color,
     val textColor: Color,
     val navBarLabelColor: Color,
 )

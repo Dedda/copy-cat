@@ -12,6 +12,8 @@ class SampleRepository: Repository {
 
     override fun allServers(): List<Server> = servers
 
+    override fun serverById(id: Long) = allServers().find { it.id == id }
+
     override fun insertServer(name: String, address: String): Server? {
         if (allServers().none { it.name == name || it.address == address }) {
             val id = if (servers.isEmpty()) 1 else servers.maxOf { it.id } + 1
@@ -20,5 +22,13 @@ class SampleRepository: Repository {
             return server
         }
         return null
+    }
+
+    override fun updateServer(server: Server) {
+        servers.replaceAll { if (it.id == server.id) server else it }
+    }
+
+    override fun deleteServer(id: Long) {
+        servers.removeIf { it.id == id }
     }
 }

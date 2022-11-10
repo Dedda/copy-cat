@@ -7,11 +7,17 @@ CREATE TABLE Server (
 allServers:
 SELECT * FROM Server;
 
+serverById:
+SELECT * FROM Server WHERE id = ?;
+
 serverByNameOrAddress:
 SELECT * FROM Server WHERE name = ? OR address = ? LIMIT 1;
 
 insertServer:
-INSERT INTO Server(id, name, address) VALUES ((SELECT IFNULL(MAX(id), 0) FROM Server LIMIT 1) + 1, ?, ?);
+INSERT INTO Server(id, name, address) VALUES((SELECT IFNULL(MAX(id), 0) FROM Server LIMIT 1) + 1, ?, ?);
+
+updateServer:
+INSERT OR REPLACE INTO Server(id, name, address) VALUES(?, ?, ?);
 
 deleteServer:
 DELETE FROM Server WHERE id = ?;
