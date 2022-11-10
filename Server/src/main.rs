@@ -24,7 +24,7 @@ fn rocket() -> Rocket<Build> {
 #[serde(crate = "rocket::serde")]
 struct ClipboardPush {
     pub version: i32,
-    pub content_type: String,
+    pub clipboard_type: String,
     pub contents: String,
 }
 
@@ -56,7 +56,7 @@ async fn push(push: Json<ClipboardPush>) -> Json<ClipboardPushResponse>{
     if push.version.ne(&PROTOCOL_VERSION){
         return Json(ClipboardPushResponse::make_error(format!("Unsupported version {}. Expected {}", push.version, PROTOCOL_VERSION)))
     }
-    let response = match push.content_type.as_str() {
+    let response = match push.clipboard_type.as_str() {
         "text" => {
             let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
             let raw = base64::decode(push.contents.clone()).unwrap();
@@ -113,6 +113,7 @@ fn request(request: Json<ClipboardRequest>) -> Json<ClipboardPullResponse> {
         "text" => {
             let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
             let contents = ctx.get_contents().unwrap();
+            info!("Received clipboard text: {}", contents);
             Json(ClipboardPullResponse::make_text(base64::encode(contents)))
         },
         unsupported => Json(ClipboardPullResponse::make_error(unsupported.into(), "Unsupported clipboard_type".into()))
