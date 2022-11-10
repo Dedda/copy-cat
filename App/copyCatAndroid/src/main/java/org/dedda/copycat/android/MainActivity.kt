@@ -44,14 +44,14 @@ class MainActivity : ComponentActivity() {
             }
         }
         setContent {
-            val navControler = rememberNavController()
+            val navController = rememberNavController()
             MyApplicationTheme {
                 Scaffold(
                     topBar = {},
                     content = { padding ->
                         NavHost(
                             modifier = Modifier.padding(padding),
-                            navController = navControler,
+                            navController = navController,
                             startDestination = "home",
                         ) {
                             composable("home") {
@@ -60,14 +60,14 @@ class MainActivity : ComponentActivity() {
                             composable("servers") {
                                 ServerListContents(
                                     database,
-                                    onNavigateToAddServer = { navControler.navigate("addServer") },
-                                    onNavigateToEditServer = { serverId -> navControler.navigate("editServer/$serverId") },
+                                    onNavigateToAddServer = { navController.navigate("addServer") },
+                                    onNavigateToEditServer = { serverId -> navController.navigate("editServer/$serverId") },
                                 )
                             }
                             composable("addServer") {
                                 AddServerContents(
                                     database,
-                                    onNavigateBack = { navControler.popBackStack() }
+                                    onNavigateBack = { navController.popBackStack() }
                                 )
                             }
                             composable(
@@ -81,7 +81,7 @@ class MainActivity : ComponentActivity() {
                                     database,
                                     startAddress = backStackEntry.arguments?.getString("address")
                                         ?: "",
-                                    onNavigateBack = { navControler.popBackStack() }
+                                    onNavigateBack = { navController.popBackStack() }
                                 )
                             }
                             composable(
@@ -94,7 +94,7 @@ class MainActivity : ComponentActivity() {
                                 EditServer(
                                     database,
                                     serverId = backStackEntry.arguments!!.getLong("serverId"),
-                                    onNavigateBack = { navControler.popBackStack() }
+                                    onNavigateBack = { navController.popBackStack() }
                                 )
                             }
                             composable("settings") {
@@ -102,19 +102,19 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         (LocalContext.current as? Activity)?.intent?.let {
-                            handleIntentUriNavigation(it, navControler, database)
+                            handleIntentUriNavigation(it, navController, database)
                         }
                     },
                     bottomBar = {
                         BottomNavigation {
-                            val navBackEntry by navControler.currentBackStackEntryAsState()
+                            val navBackEntry by navController.currentBackStackEntryAsState()
                             val currentRoute = navBackEntry?.destination?.route
                             BottomNavItem.values().forEach { navItem ->
                                 BottomNavigationItem(
                                     selected = currentRoute == navItem.route,
                                     onClick = {
-                                        navControler.backQueue.clear()
-                                        navControler.navigate(navItem.route)
+                                        navController.backQueue.clear()
+                                        navController.navigate(navItem.route)
                                     },
                                     icon = {
                                         Icon(
@@ -137,7 +137,7 @@ class MainActivity : ComponentActivity() {
             }
             DisposableEffect(Unit) {
                 val listener = Consumer<Intent> {
-                    handleIntentUriNavigation(intent, navControler, database)
+                    handleIntentUriNavigation(intent, navController, database)
                 }
                 addOnNewIntentListener(listener)
                 onDispose { removeOnNewIntentListener(listener) }
@@ -148,25 +148,25 @@ class MainActivity : ComponentActivity() {
 
 private fun handleIntentUriNavigation(
     intent: Intent,
-    navControler: NavController,
+    navController: NavController,
     repo: Repository,
 ) {
     val serverAddress = addServerAddress(intent)
     serverAddress?.let { addServerAddress ->
-        navigateToServerConfiguration(repo, addServerAddress, navControler)
+        navigateToServerConfiguration(repo, addServerAddress, navController)
     }
 }
 
 private fun navigateToServerConfiguration(
     repo: Repository,
     addServerAddress: String,
-    navControler: NavController
+    navController: NavController
 ) {
     val foundServer = repo.serverByAddress(addServerAddress)
     if (foundServer != null) {
-        navControler.navigate("editServer/${foundServer.id}")
+        navController.navigate("editServer/${foundServer.id}")
     } else {
-        navControler.navigate("addServer/$addServerAddress")
+        navController.navigate("addServer/$addServerAddress")
     }
 }
 

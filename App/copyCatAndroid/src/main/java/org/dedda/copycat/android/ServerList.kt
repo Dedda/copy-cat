@@ -97,7 +97,7 @@ fun ServerListItem(
                 fontSize = 24.sp,
                 text = server.name,
             )
-            Row() {
+            Row {
                 IconButton(onClick = { onNavigateToEditServer(server.id) }) {
                     Icon(Icons.Filled.Edit, "Edit icon", tint = appColors().editIconColor)
                 }
@@ -113,7 +113,7 @@ fun ServerListItem(
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun ServerListItemPreview() {
-    MyApplicationTheme() {
+    MyApplicationTheme {
         ServerListItem(SampleRepository().allServers()[0])
     }
 }
@@ -122,7 +122,7 @@ fun ServerListItemPreview() {
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun ServerListPreview() {
-    MyApplicationTheme() {
+    MyApplicationTheme {
         ServerListContents(SampleRepository())
     }
 }
