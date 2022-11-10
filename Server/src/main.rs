@@ -10,6 +10,7 @@ use local_ip_address::local_ip;
 use rocket::{Build, post, Rocket};
 use rocket::serde::{Deserialize, Serialize};
 use rocket::serde::json::Json;
+use serde::de::StdError;
 
 const PROTOCOL_VERSION: i32 = 1;
 
@@ -27,6 +28,21 @@ fn get_local_link() -> String {
     let ip_addr = local_ip().expect("Cannot get local IP address");
     let port = 8000;
     format!("copycat://connect.app?address={}:{}", ip_addr, port)
+}
+
+struct VersionError {
+    pub expected: i32,
+    pub actual: i32,
+}
+
+fn check_protocol_version(version: &i32) -> Result<(), VersionError> {
+    if version.ne(&PROTOCOL_VERSION) {
+        return Err(VersionError {
+            expected: PROTOCOL_VERSION,
+            actual: version.clone(),
+        });
+    }
+    return Ok(());
 }
 
 #[derive(Deserialize)]
@@ -60,6 +76,12 @@ impl ClipboardPushResponse {
     }
 }
 
+impl From<VersionError> for ClipboardPushResponse {
+    fn from(error: VersionError) -> Self {
+        ClipboardPushResponse::make_error(format!("Unsupported version {}. Expected {}", error.actual, error.expected))
+    }
+}
+
 impl From<DecodeError> for ClipboardPushResponse {
     fn from(error: DecodeError) -> Self {
         ClipboardPushResponse::make_error(format!("Unable to parse text content: {}", error))
@@ -72,22 +94,24 @@ impl From<FromUtf8Error> for ClipboardPushResponse {
     }
 }
 
+impl From<Box<dyn StdError>> for ClipboardPushResponse {
+    fn from(error: Box<dyn StdError>) -> Self {
+        ClipboardPushResponse::make_error(format!("General error: {}", error))
+    }
+}
+
 #[post("/push", format = "application/json", data = "<push>")]
 async fn push(push: Json<ClipboardPush>) -> Json<ClipboardPushResponse> {
-    if let Some(err) = check_version(&push.version) {
-        return Json(ClipboardPushResponse::make_error(err));
+    if let Err(err) = check_protocol_version(&push.version) {
+        let response: ClipboardPushResponse = err.into();
+        error!("{}", response.error.clone().unwrap());
+        return Json(response);
     }
     let response = match push.clipboard_type.as_str() {
         "text" => {
-            if let Some(text) = parse_push_text(&push) {
-                debug!("Received text clipboard `{}` from client.", text);
-                if let Err(msg) = set_clipboard_text(text) {
-                    ClipboardPushResponse::make_error(msg)
-                } else {
-                    ClipboardPushResponse::make_ok()
-                }
-            } else {
-                ClipboardPushResponse::make_error("Unable to parse text content".into())
+            match handle_push_text(&push) {
+                Err(err) => err,
+                _ => ClipboardPushResponse::make_ok(),
             }
         }
         _ => {
@@ -96,24 +120,24 @@ async fn push(push: Json<ClipboardPush>) -> Json<ClipboardPushResponse> {
             ClipboardPushResponse::make_error(error_msg.into())
         }
     };
-    return Json(response);
+    Json(response)
 }
 
-fn parse_push_text(push: &Json<ClipboardPush>) -> Option<String> {
-    if let Ok(raw) = base64::decode(push.contents.clone()) {
-        if let Ok(text) = String::from_utf8(raw) {
-            return Some(text);
-        }
-    }
-    return None;
+fn handle_push_text(push: &Json<ClipboardPush>) -> Result<(), ClipboardPushResponse> {
+    let text = parse_push_text(push)?;
+    set_clipboard_text(text)?;
+    Ok(())
 }
 
-fn set_clipboard_text(text: String) -> Result<(), String> {
-    if let Ok(ctx) = ClipboardProvider::new() {
-        let mut ctx: ClipboardContext = ctx;
-        return ctx.set_contents(text).map_err(|_| "Unable to set clipboard text".into());
-    }
-    return Err("Unable to get clipboard context".into())
+fn parse_push_text(push: &Json<ClipboardPush>) -> Result<String, ClipboardPushResponse> {
+    let raw = base64::decode(push.contents.clone())?;
+    let text= String::from_utf8(raw)?;
+    return Ok(text);
+}
+
+fn set_clipboard_text(text: String) -> Result<(), ClipboardPushResponse> {
+    let mut ctx: ClipboardContext = ClipboardProvider::new()?;
+    Ok(ctx.set_contents(text)?)
 }
 
 #[derive(Deserialize)]
@@ -142,41 +166,62 @@ impl ClipboardPullResponse {
         }
     }
 
-    fn make_error(content_type: String, msg: String) -> Self {
+    fn make_error(content_type: Option<String>, msg: String) -> Self {
         Self {
             version: PROTOCOL_VERSION,
-            clipboard_type: content_type,
+            clipboard_type: content_type.unwrap_or(String::new()),
             contents: None,
             error: Some(msg),
         }
+    }
+
+    fn make_unsupported_clipboard_type_error(clipboard_type: String) -> Self {
+        Self {
+            version: PROTOCOL_VERSION,
+            error: Some(format!("Unsupported content_type: {}", clipboard_type)),
+            clipboard_type: clipboard_type,
+            contents: None,
+        }
+    }
+}
+
+impl From<VersionError> for ClipboardPullResponse {
+    fn from(error: VersionError) -> Self {
+        ClipboardPullResponse::make_error(None, format!("Unsupported version {}. Expected {}", error.actual, error.expected))
+    }
+}
+
+impl From<Box<dyn StdError>> for ClipboardPullResponse {
+    fn from(error: Box<dyn StdError>) -> Self {
+        ClipboardPullResponse::make_error(None, format!("General error: {}", error))
     }
 }
 
 #[post("/request", format = "application/json", data = "<request>")]
 fn request(request: Json<ClipboardRequest>) -> Json<ClipboardPullResponse> {
-    if let Some(err) = check_version(&request.version) {
-        return Json(ClipboardPullResponse::make_error(request.clipboard_type.clone(), err));
+    if let Err(err) = check_protocol_version(&request.version) {
+        let response: ClipboardPullResponse = err.into();
+        error!("{}", response.error.clone().unwrap());
+        return Json(response);
     }
-    return match request.clipboard_type.as_str() {
+    let response = match request.clipboard_type.as_str() {
         "text" => {
-            let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
-            let contents = ctx.get_contents().unwrap();
-            debug!("Sending contents `{}` to client", contents);
-            Json(ClipboardPullResponse::make_text(base64::encode(contents)))
+            match handle_pull_text() {
+                Ok(text) => ClipboardPullResponse::make_text(text),
+                Err(err) => err,
+            }
         }
         unsupported => {
-            let error_msg = format!("Unknown clipboard_type `{}`", unsupported);
-            error!("{}", error_msg);
-            Json(ClipboardPullResponse::make_error(request.clipboard_type.clone(), error_msg.into()))
+            error!("Unknown clipboard_type `{}`", unsupported);
+            ClipboardPullResponse::make_unsupported_clipboard_type_error(unsupported.into())
         }
     };
+    Json(response)
 }
 
-fn check_version(version: &i32) -> Option<String> {
-    if version.ne(&PROTOCOL_VERSION) {
-        let error_msg = format!("Unsupported version {}. Expected {}", version, PROTOCOL_VERSION);
-        error!("{}", error_msg);
-        return Some(error_msg);
-    }
-    return None;
+fn handle_pull_text() -> Result<String, ClipboardPullResponse> {
+    let mut ctx: ClipboardContext = ClipboardProvider::new()?;
+    let contents = ctx.get_contents()?;
+    let contents = base64::encode(contents);
+    return Ok(contents)
 }
