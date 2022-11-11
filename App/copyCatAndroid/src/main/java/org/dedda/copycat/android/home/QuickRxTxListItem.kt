@@ -33,6 +33,7 @@ import org.dedda.copycat.android.sampledata.SampleRepository
 import org.dedda.copycat.communication.HttpClipboardSink
 import org.dedda.copycat.communication.HttpClipboardSource
 import org.dedda.copycat.database.Server
+import java.net.ConnectException
 
 @Composable
 fun QuickRxTxListItem(
@@ -86,18 +87,22 @@ fun sendClipboard(context: Context, server: Server) {
     val clipboard = getClipboardManager(context)
     val primaryClip = clipboard.primaryClip
     runBlocking {
-        val toastText = if (primaryClip != null) {
-            val text = primaryClip.getItemAt(0).coerceToText(context)
-            if (HttpClipboardSink(server).sendText(text.toString())) {
-                "Sent clipboard to ${server.name}"
+        try {
+            val toastText = if (primaryClip != null) {
+                val text = primaryClip.getItemAt(0).coerceToText(context)
+                if (HttpClipboardSink(server).sendText(text.toString())) {
+                    "Sent clipboard to ${server.name}"
+                } else {
+                    "Could not send clipboard to ${server.name}"
+                }
             } else {
-                "Could not send clipboard to ${server.name}"
+                "Could not get clipboard contents"
             }
-        } else {
-            "Could not get clipboard contents"
-        }
-        MainScope().launch {
-            Toast.makeText(context, toastText, Toast.LENGTH_SHORT).show()
+            MainScope().launch {
+                Toast.makeText(context, toastText, Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            toastNetworkException(e, context, server)
         }
     }
 }
@@ -106,22 +111,43 @@ fun receiveClipboard(context: Context, server: Server) {
     val clipboard = getClipboardManager(context)
     val source = HttpClipboardSource(server)
     runBlocking {
-        val text = source.requestText()
-        val toastText = if (text != null) {
-            clipboard.setPrimaryClip(ClipData.newPlainText("CopyCat Paste", text))
-            "Received clipboard from ${server.name}"
+        try {
+            val text = source.requestText()
+            val toastText = if (text != null) {
+                clipboard.setPrimaryClip(ClipData.newPlainText("CopyCat Paste", text))
+                "Received clipboard from ${server.name}"
 
-        } else {
-            "Could not request clipboard from ${server.name}"
-        }
-        MainScope().launch {
-            Toast.makeText(context, toastText, Toast.LENGTH_SHORT).show()
+            } else {
+                "Could not request clipboard from ${server.name}"
+            }
+            MainScope().launch {
+                Toast.makeText(context, toastText, Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            toastNetworkException(e, context, server)
         }
     }
 }
 
 private fun getClipboardManager(context: Context): ClipboardManager {
     return context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+}
+
+
+fun toastTextFromException(exception: Exception): String {
+    return when (exception) {
+        is ConnectException -> "Cannot connect: ${exception.localizedMessage}"
+        else -> "Unknown error: ${exception.localizedMessage}"
+    }
+}
+
+private fun toastNetworkException(
+    e: Exception,
+    context: Context,
+    server: Server
+) = MainScope().launch {
+    val exceptionText = toastTextFromException(e)
+    Toast.makeText(context, "[${server.name}] $exceptionText", Toast.LENGTH_SHORT).show()
 }
 
 @Preview
